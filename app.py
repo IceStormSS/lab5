@@ -42,7 +42,7 @@ swagger_template = {
                        "- **Рівень 3**: Валідація вхідних даних та версіонування API (`/api/v1` і `/api/v2`).\n\n"
                        "**Розподіл робіт (50% / 50%):**\n"
                        "- **Частина 1 (Виконано)**: Архітектура API, обробка помилок, Swagger UI, ендпоінти Products, Feedbacks, версія API v2 з пагінацією.\n"
-                       "- **Частина 2 (Для напарника)**: Ендпоінти Orders, Order Items, Coupons, Customers.",
+                       "- **Частина 2 (Виконано)**: Ендпоінти Orders, Order Items, Coupons, Customers.",
         "version": "1.0.0"
     },
     "basePath": "/",

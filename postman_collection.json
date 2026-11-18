@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "lab05-outerwear-shop-api",
-    "name": "Outerwear Shop REST API (Lab 5 - Part 1)",
+    "name": "Outerwear Shop REST API (Lab 5 - Complete: Part 1 & Part 2)",
     "description": "Колекція запитів для тестування REST API інтернет-магазину верхнього одягу (Лабораторна робота №5). Містить позитивні сценарії та тести помилок (400, 404).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -516,6 +516,536 @@
               "raw": "{{baseUrl}}/apispec_1.json",
               "host": ["{{baseUrl}}"],
               "path": ["apispec_1.json"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Замовлення (Orders v1 & v2)",
+      "item": [
+        {
+          "name": "GET Всі замовлення (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Відповідь є масивом замовлень\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "GET Фільтрація замовлень за статусом (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders?status=Нове",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Нове"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Замовлення за ID з позиціями (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Замовлення містить деталі та список items\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('id');",
+                  "    pm.expect(data).to.have.property('customer_name');",
+                  "    pm.expect(data).to.have.property('items');",
+                  "    pm.expect(data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "1"]
+            }
+          }
+        },
+        {
+          "name": "GET Замовлення не знайдено (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Повертається помилка JSON\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql(404);",
+                  "    pm.expect(data).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/99999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "99999"]
+            }
+          }
+        },
+        {
+          "name": "POST Створити нове замовлення з купоном (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Замовлення створено та розраховано знижку\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('id');",
+                  "    pm.expect(data.customer_name).to.eql('Ольга Ковальчук');",
+                  "    pm.expect(data.coupon_code).to.eql('SALE10');",
+                  "    pm.expect(data.discount_amount).to.be.above(0);",
+                  "    pm.collectionVariables.set('lastCreatedOrderId', data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ольга Ковальчук\",\n  \"phone\": \"+380671112233\",\n  \"address\": \"м. Львів, пр. Свободи, 12\",\n  \"coupon_code\": \"SALE10\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 1,\n      \"price\": 3200.0\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "POST Валідація замовлення - помилка полів (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Повертається список деталей помилок\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql(400);",
+                  "    pm.expect(data.details).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"phone\": \"123\",\n  \"address\": \"\",\n  \"items\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Оновити статус замовлення (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Статус оновлено\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql('В обробці');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"В обробці\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Некоректний статус замовлення (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"НеіснуючийСтатус\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "GET Статистика замовлень v2 (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Містить агреговані поля статистики\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.version).to.eql('v2');",
+                  "    pm.expect(data).to.have.property('total_orders');",
+                  "    pm.expect(data).to.have.property('total_revenue');",
+                  "    pm.expect(data).to.have.property('by_status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/orders/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "orders", "stats"]
+            }
+          }
+        },
+        {
+          "name": "GET Пагінація замовлень v2 (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Конверт пагінації v2\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.version).to.eql('v2');",
+                  "    pm.expect(data.pagination.page).to.eql(1);",
+                  "    pm.expect(data.pagination.per_page).to.eql(5);",
+                  "    pm.expect(data.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/orders?page=1&per_page=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Промокоди та Клієнти (Coupons & Customers)",
+      "item": [
+        {
+          "name": "GET Всі промокоди (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Список купонів є масивом\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.be.an('array');",
+                  "    pm.expect(data.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons"]
+            }
+          }
+        },
+        {
+          "name": "POST Перевірка діючого промокоду (200 OK - valid: true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Промокод валідний\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.valid).to.be.true;",
+                  "    pm.expect(data.discount_percent).to.eql(10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SALE10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons", "validate"]
+            }
+          }
+        },
+        {
+          "name": "POST Перевірка неіснуючого промокоду (200 OK - valid: false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Промокод недійсний\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.valid).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"NOT_FOUND_CODE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons", "validate"]
+            }
+          }
+        },
+        {
+          "name": "POST Помилка валідації промокоду без коду (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons", "validate"]
+            }
+          }
+        },
+        {
+          "name": "GET Список зареєстрованих клієнтів (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Клієнти повертаються масивом\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.be.an('array');",
+                  "    pm.expect(data.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "customers"]
             }
           }
         }

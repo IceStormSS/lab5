@@ -440,15 +440,15 @@ def create_feedback():
 
 
 # =====================================================================
-# 3. ЗАМОВЛЕННЯ ТА ПРОМОКОДИ (СТУБИ / ПЛАН ДЛЯ НАПАРНИКА - Частина 2)
+# 3. ЗАМОВЛЕННЯ (ORDERS API) - Частина 2
 # =====================================================================
 
 @api_v1_bp.route('/orders', methods=['GET'])
-def get_orders_placeholder():
-    """[Частина 2: Для напарника] Отримати список усіх замовлень
+def get_orders():
+    """Отримати список усіх замовлень із можливістю фільтрації
     ---
     tags:
-      - Orders (Частина 2 - Для напарника)
+      - Orders (Частина 2 - Замовлення)
     parameters:
       - name: status
         in: query
@@ -462,7 +462,42 @@ def get_orders_placeholder():
         description: Пошук за номером телефону клієнта
     responses:
       200:
-        description: Список усіх замовлень магазину
+        description: Список замовлень
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              customer_id:
+                type: integer
+                example: 1
+              customer_name:
+                type: string
+                example: Марія Шевченко
+              customer_phone:
+                type: string
+                example: "+380671234567"
+              customer_address:
+                type: string
+                example: м. Київ, вул. Хрещатик, 10
+              status:
+                type: string
+                example: Нове
+              total_price:
+                type: number
+                example: 4680.0
+              coupon_code:
+                type: string
+                example: SALE10
+              discount_amount:
+                type: number
+                example: 520.0
+              created_at:
+                type: string
+                example: "2026-11-18 20:15:00"
     """
     status = request.args.get('status')
     phone = request.args.get('phone')
@@ -479,15 +514,325 @@ def get_orders_placeholder():
     return jsonify(orders), 200
 
 
-@api_v1_bp.route('/coupons', methods=['GET'])
-def get_coupons_placeholder():
-    """[Частина 2: Для напарника] Отримати список діючих промокодів
+@api_v1_bp.route('/orders/<int:order_id>', methods=['GET'])
+def get_order_by_id_endpoint(order_id):
+    """Отримати деталі конкретного замовлення з переліком куплених позицій
     ---
     tags:
-      - Coupons (Частина 2 - Для напарника)
+      - Orders (Частина 2 - Замовлення)
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: Унікальний ідентифікатор замовлення
+    responses:
+      200:
+        description: Дані замовлення та позиції order_items
+      404:
+        description: Замовлення не знайдено
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: Замовлення #999 не знайдено
+            status:
+              type: integer
+              example: 404
+    """
+    order, items = models.get_order_details(order_id)
+    if not order:
+        return jsonify({'error': f'Замовлення #{order_id} не знайдено', 'status': 404}), 404
+
+    order_dict = row_to_dict(order)
+    order_dict['items'] = [row_to_dict(item) for item in items]
+    return jsonify(order_dict), 200
+
+
+@api_v1_bp.route('/orders', methods=['POST'])
+def create_order_endpoint():
+    """Створити нове замовлення через REST API (з валідацією даних)
+    ---
+    tags:
+      - Orders (Частина 2 - Замовлення)
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - name
+            - phone
+            - address
+            - items
+          properties:
+            name:
+              type: string
+              example: Марія Шевченко
+            phone:
+              type: string
+              example: "+380671234567"
+            address:
+              type: string
+              example: м. Київ, вул. Хрещатик, 10
+            coupon_code:
+              type: string
+              example: SALE10
+            items:
+              type: array
+              items:
+                type: object
+                required:
+                  - product_id
+                  - quantity
+                  - price
+                properties:
+                  product_id:
+                    type: integer
+                    example: 1
+                  quantity:
+                    type: integer
+                    example: 2
+                  price:
+                    type: number
+                    example: 3200.0
+    responses:
+      201:
+        description: Замовлення успішно створено
+      400:
+        description: Помилка валідації вхідних даних
+    """
+    data = request.get_json(silent=True)
+    if not data or not isinstance(data, dict):
+        return jsonify({'error': 'Очікується тіло запиту у форматі JSON', 'status': 400}), 400
+
+    name = data.get('name')
+    phone = data.get('phone')
+    address = data.get('address')
+    items = data.get('items')
+    coupon_code = data.get('coupon_code')
+
+    errors = []
+    if not name or not isinstance(name, str) or len(name.strip()) < 2:
+        errors.append('Поле "name" має містити щонайменше 2 символи.')
+    if not phone or not isinstance(phone, str) or len(phone.strip()) < 7:
+        errors.append('Поле "phone" обов\'язкове (мінімум 7 символів).')
+    if not address or not isinstance(address, str) or len(address.strip()) < 5:
+        errors.append('Поле "address" обов\'язкове (мінімум 5 символів).')
+    if not items or not isinstance(items, list) or len(items) == 0:
+        errors.append('Список "items" має містити хоча б один товар.')
+    else:
+        for idx, item in enumerate(items):
+            if not isinstance(item, dict):
+                errors.append(f'Позиція #{idx+1} у списку items має бути об\'єктом.')
+                continue
+            if 'product_id' not in item or not isinstance(item['product_id'], int):
+                errors.append(f'Позиція #{idx+1}: "product_id" має бути цілим числом.')
+            if 'quantity' not in item or not isinstance(item['quantity'], int) or item['quantity'] <= 0:
+                errors.append(f'Позиція #{idx+1}: "quantity" має бути додатним цілим числом.')
+            if 'price' not in item or not isinstance(item['price'], (int, float)) or float(item['price']) <= 0:
+                errors.append(f'Позиція #{idx+1}: "price" має бути додатним числом.')
+
+    if errors:
+        return jsonify({'error': 'Помилка валідації замовлення', 'details': errors, 'status': 400}), 400
+
+    order_id = models.create_order(
+        name=name.strip(),
+        phone=phone.strip(),
+        address=address.strip(),
+        items=items,
+        coupon_code=coupon_code.strip() if coupon_code and isinstance(coupon_code, str) else None
+    )
+
+    created_order, order_items = models.get_order_details(order_id)
+    result = row_to_dict(created_order)
+    result['items'] = [row_to_dict(i) for i in order_items]
+    return jsonify(result), 201
+
+
+@api_v1_bp.route('/orders/<int:order_id>/status', methods=['PATCH'])
+def update_status_endpoint(order_id):
+    """Оновити статус замовлення ('Нове', 'В обробці', 'Відправлено', 'Доставлено', 'Скасовано')
+    ---
+    tags:
+      - Orders (Частина 2 - Замовлення)
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID замовлення
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              example: В обробці
+    responses:
+      200:
+        description: Статус успішно оновлено
+      400:
+        description: Некоректний статус
+      404:
+        description: Замовлення не знайдено
+    """
+    order = models.get_order_by_id(order_id)
+    if not order:
+        return jsonify({'error': f'Замовлення #{order_id} не знайдено', 'status': 404}), 404
+
+    data = request.get_json(silent=True) or {}
+    new_status = data.get('status')
+    valid_statuses = ['Нове', 'В обробці', 'Відправлено', 'Доставлено', 'Скасовано']
+    if not new_status or new_status not in valid_statuses:
+        return jsonify({
+            'error': f'Некоректний статус. Дозволені: {valid_statuses}',
+            'status': 400
+        }), 400
+
+    models.update_order_status(order_id, new_status)
+    return jsonify({'id': order_id, 'status': new_status, 'message': 'Статус оновлено'}), 200
+
+
+@api_v1_bp.route('/orders/<int:order_id>', methods=['DELETE'])
+def delete_order_endpoint(order_id):
+    """Видалити замовлення за його ID
+    ---
+    tags:
+      - Orders (Частина 2 - Замовлення)
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID замовлення для видалення
+    responses:
+      204:
+        description: Замовлення успішно видалено (без тіла)
+      404:
+        description: Замовлення не знайдено
+    """
+    order = models.get_order_by_id(order_id)
+    if not order:
+        return jsonify({'error': f'Замовлення #{order_id} не знайдено', 'status': 404}), 404
+
+    models.delete_order(order_id)
+    return '', 204
+
+
+# =====================================================================
+# 4. ПРОМОКОДИ ТА КЛІЄНТИ (COUPONS & CUSTOMERS API) - Частина 2
+# =====================================================================
+
+@api_v1_bp.route('/coupons', methods=['GET'])
+def get_coupons():
+    """Отримати список усіх діючих промокодів
+    ---
+    tags:
+      - Coupons (Частина 2 - Промокоди)
     responses:
       200:
         description: Список промокодів зі знижками
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              code:
+                type: string
+                example: SALE10
+              discount_percent:
+                type: integer
+                example: 10
+              created_at:
+                type: string
+                example: "2026-11-18 20:00:00"
     """
     rows = models.get_all_coupons()
+    return jsonify([row_to_dict(r) for r in rows]), 200
+
+
+@api_v1_bp.route('/coupons/validate', methods=['POST'])
+def validate_coupon_endpoint():
+    """Перевірити валідність промокоду на знижку
+    ---
+    tags:
+      - Coupons (Частина 2 - Промокоди)
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              type: string
+              example: SALE10
+    responses:
+      200:
+        description: Результат перевірки промокоду
+      400:
+        description: Код промокоду не передано
+    """
+    data = request.get_json(silent=True) or {}
+    code = data.get('code')
+    if not code or not isinstance(code, str) or not code.strip():
+        return jsonify({'error': 'Поле "code" обов\'язкове', 'status': 400}), 400
+
+    coupon = models.get_coupon(code.strip())
+    if not coupon:
+        return jsonify({'valid': False, 'message': 'Промокод недійсний або не існує'}), 200
+
+    return jsonify({
+        'valid': True,
+        'code': coupon['code'],
+        'discount_percent': coupon['discount_percent']
+    }), 200
+
+
+@api_v1_bp.route('/customers', methods=['GET'])
+def get_customers_endpoint():
+    """Отримати список зареєстрованих клієнтів магазину
+    ---
+    tags:
+      - Customers (Частина 2 - Клієнти)
+    responses:
+      200:
+        description: Список клієнтів
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: Олександр Коваленко
+              email:
+                type: string
+                example: oleksandr@example.com
+              phone:
+                type: string
+                example: "+380501234567"
+              address:
+                type: string
+                example: "м. Київ, вул. Хрещатик, 1"
+              created_at:
+                type: string
+                example: "2026-11-18 20:00:00"
+    """
+    rows = models.get_all_customers()
     return jsonify([row_to_dict(r) for r in rows]), 200
