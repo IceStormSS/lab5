@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Каталог - Теплий Сезон{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Каталог верхнього одягу</h1>
+    <p class="text-gray-500">Усі товари зберігаються у базі даних SQLite (знайдено: {{ items|length }})</p>
+</div>
+
+<!-- Панель фільтрації та пошуку (Рівень 3) -->
+<div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-8">
+    <form method="GET" action="{{ url_for('shop_bp.shop') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        <!-- Пошук -->
+        <div class="md:col-span-6">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Пошук за назвою або описом</label>
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Наприклад: пуховик, парка..." 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+        </div>
+
+        <!-- Категорія -->
+        <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Категорія</label>
+            <select name="category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm bg-white">
+                <option value="all" {% if current_category == 'all' %}selected{% endif %}>Усі категорії</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="md:col-span-2 flex gap-2 pt-5">
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-sm transition">
+                Знайти
+            </button>
+            <a href="{{ url_for('shop_bp.shop') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 px-3 rounded-lg text-sm text-center transition">
+                Скинути
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Сітка товарів -->
+{% if items %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {% for item in items %}
+    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition duration-200 border border-gray-100 overflow-hidden flex flex-col">
+        <div class="h-44 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center text-blue-600 relative p-4">
+            <span class="text-4xl mb-2">🧥</span>
+            <span class="text-xs bg-white/80 px-2.5 py-1 rounded-full font-medium text-blue-800 backdrop-blur-sm">{{ item.category }}</span>
+        </div>
+        <div class="p-5 flex flex-col flex-grow">
+            <h2 class="font-bold text-gray-900 text-lg mb-2">{{ item.name }}</h2>
+            <p class="text-gray-500 text-xs mb-4 flex-grow line-clamp-3">{{ item.description or 'Опис товару незабаром з\'явиться.' }}</p>
+            
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+                <div>
+                    <span class="text-xs text-gray-400 block">Ціна</span>
+                    <span class="text-xl font-bold text-gray-900">{{ "%.2f"|format(item.price) }} <span class="text-sm font-normal text-gray-600">грн</span></span>
+                </div>
+                <a href="{{ url_for('shop_bp.product_detail', product_id=item.id) }}" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg text-xs transition">
+                    Деталі
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl p-12 text-center border border-gray-100">
+    <div class="text-5xl mb-3">🔍</div>
+    <h3 class="text-lg font-bold text-gray-800 mb-1">Товарів не знайдено</h3>
+    <p class="text-gray-500 text-sm mb-4">Спробуйте змінити критерії пошуку або обрати іншу категорію.</p>
+    <a href="{{ url_for('shop_bp.shop') }}" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium">Показати всі товари</a>
+</div>
+{% endif %}
+{% endblock %}

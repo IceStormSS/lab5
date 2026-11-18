@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Замовлення #{{ order.id }} оформлено - Теплий Сезон{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto py-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mb-6">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            ✓
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">Дякуємо за ваше замовлення!</h1>
+        <p class="text-gray-600 text-sm mb-4">
+            Замовлення <span class="font-bold text-gray-900">#{{ order.id }}</span> успішно збережено в базі даних та передано на обробку.
+        </p>
+        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            Статус: {{ order.status }}
+        </span>
+    </div>
+
+    <!-- Деталі замовлення -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>📋</span> Інформація про доставку
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-xs text-gray-400 block mb-0.5">Отримувач:</span>
+                    <span class="font-semibold text-gray-800">{{ order.customer_name }}</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-400 block mb-0.5">Телефон:</span>
+                    <span class="font-semibold text-gray-800">{{ order.customer_phone }}</span>
+                </div>
+                <div class="sm:col-span-2">
+                    <span class="text-xs text-gray-400 block mb-0.5">Адреса доставки:</span>
+                    <span class="font-medium text-gray-800">{{ order.customer_address }}</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-400 block mb-0.5">Дата та час створення:</span>
+                    <span class="text-gray-600">{{ order.created_at }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <h2 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>🧥</span> Замовлені товари (Many-to-Many)
+            </h2>
+            <div class="divide-y divide-gray-100">
+                {% for item in items %}
+                <div class="py-3 flex justify-between items-center text-sm">
+                    <div>
+                        <span class="font-bold text-gray-900 block">{{ item.product_name }}</span>
+                        <span class="text-xs text-gray-500">{{ item.product_category }} &bull; {{ item.quantity }} шт. &times; {{ "%.2f"|format(item.price) }} грн</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">
+                        {{ "%.2f"|format(item.price * item.quantity) }} грн
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Розрахунок вартості та промокод -->
+            <div class="border-t border-gray-200 mt-4 pt-4 space-y-2 text-sm">
+                {% if order.coupon_code %}
+                <div class="flex justify-between items-center text-emerald-600 font-medium">
+                    <span class="flex items-center gap-1">
+                        <span>🏷️</span> Промокод <strong class="uppercase font-bold">{{ order.coupon_code }}</strong>:
+                    </span>
+                    <span>-{{ "%.2f"|format(order.discount_amount) }} грн</span>
+                </div>
+                {% endif %}
+
+                <div class="flex justify-between items-center text-lg font-extrabold text-gray-900 pt-2 border-t border-gray-100">
+                    <span>Разом до сплати:</span>
+                    <span class="text-blue-600">{{ "%.2f"|format(order.total_price) }} грн</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки навігації -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="{{ url_for('shop_bp.shop') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl text-sm transition text-center shadow">
+            Повернутися до каталогу
+        </a>
+        <a href="{{ url_for('shop_bp.my_orders', phone=order.customer_phone) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl text-sm transition text-center">
+            Відстежувати мої замовлення
+        </a>
+    </div>
+</div>
+{% endblock %}

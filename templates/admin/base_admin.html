@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Адмін-панель - Теплий Сезон{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Верхня панель адмінки -->
+    <header class="bg-slate-900 text-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-black tracking-wider text-blue-400">⚙️ АДМІНКА</span>
+                <span class="text-xs bg-slate-800 text-gray-300 px-2 py-1 rounded">Теплий Сезон</span>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <a href="{{ url_for('home') }}" class="text-gray-300 hover:text-white flex items-center gap-1 transition">
+                    &larr; На сайт
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-6 flex-grow flex flex-col md:flex-row gap-6">
+        <!-- Бокове меню -->
+        <aside class="w-full md:w-64 bg-white rounded-xl shadow-sm border border-gray-200 p-4 shrink-0 h-fit">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">Навігація</h3>
+            <nav class="space-y-1">
+                <a href="{{ url_for('admin_bp.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>📊</span> Загальний огляд
+                </a>
+                <a href="{{ url_for('admin_bp.orders_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>📦</span> Замовлення (Частина 2)
+                </a>
+                <a href="{{ url_for('admin_bp.coupons_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>🏷️</span> Промокоди (Рівень 3)
+                </a>
+                <a href="{{ url_for('admin_bp.feedbacks_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>💬</span> Відгуки (Feedback)
+                </a>
+                <a href="{{ url_for('admin_bp.products_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>🧥</span> Товари магазину
+                </a>
+                <a href="{{ url_for('admin_bp.customers_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition text-gray-700">
+                    <span>👥</span> Клієнти (Рівень 2)
+                </a>
+            </nav>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-xs font-bold text-green-600 uppercase tracking-wider mb-2 px-3">Статус модулів:</h3>
+                <div class="px-3 py-2 bg-green-50 rounded-lg text-xs text-green-800 space-y-1">
+                    <p class="font-bold">✔ Частина 1 (Олександр): OK</p>
+                    <p class="font-bold">✔ Частина 2 (Матвій): OK</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Основна робоча зона -->
+        <main class="flex-grow">
+            <!-- Flash-повідомлення -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-4 mb-6 rounded-lg text-sm font-medium {% if category == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-500{% elif category == 'error' %}bg-red-100 text-red-800 border-l-4 border-red-500{% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-500{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

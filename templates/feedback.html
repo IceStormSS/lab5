@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Відгуки та контакти - Теплий Сезон{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Контакти та відгуки</h1>
+    <p class="text-gray-500">Залиште свій відгук про роботу магазину «Теплий Сезон»</p>
+</div>
+
+<!-- Контактна інформація -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <h2 class="font-bold text-lg mb-4 text-blue-600 flex items-center gap-2">
+            <span>📍</span> Наші контакти
+        </h2>
+        <div class="space-y-2 text-sm text-gray-700">
+            <p><strong>Адреса:</strong> м. Львів, вул. Прикладна, 10</p>
+            <p><strong>Телефон:</strong> +380 00 000 00 00</p>
+            <p><strong>Email:</strong> info@teplyi-sezon.example</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <h2 class="font-bold text-lg mb-4 text-blue-600 flex items-center gap-2">
+            <span>🕒</span> Графік роботи
+        </h2>
+        <div class="space-y-2 text-sm text-gray-700">
+            <p><strong>Пн - Пт:</strong> 10:00 - 20:00</p>
+            <p><strong>Сб:</strong> 10:00 - 18:00</p>
+            <p><strong>Нд:</strong> вихідний</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Форма додавання відгуку -->
+    <div class="lg:col-span-5">
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-4">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Надіслати відгук</h2>
+            <form method="POST" action="{{ url_for('feedback_bp.feedback') }}" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Ваше ім'я *</label>
+                    <input type="text" name="name" required placeholder="Олександр Коваленко"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Електронна пошта (Email) *</label>
+                    <input type="email" name="email" required placeholder="oleksandr@example.com"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Текст відгуку *</label>
+                    <textarea name="message" rows="4" required placeholder="Поділіться вашими враженнями про товари або обслуговування..."
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition shadow-sm">
+                    Надіслати відгук
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список збережених відгуків з SQLite -->
+    <div class="lg:col-span-7">
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-900">Відгуки клієнтів</h2>
+                <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-full">{{ feedbacks|length }} відгуків</span>
+            </div>
+
+            {% if feedbacks %}
+            <div class="space-y-4">
+                {% for fb in feedbacks %}
+                <div class="border border-gray-100 rounded-lg p-4 bg-gray-50/50 hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="font-bold text-gray-900 text-sm">{{ fb.name }}</span>
+                            <span class="text-xs text-gray-400 block">{{ fb.email }}</span>
+                        </div>
+                        <span class="text-xs text-gray-400">{{ fb.created_at }}</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mt-2 whitespace-pre-line">{{ fb.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-400">
+                <p>Поки немає відгуків. Будьте першим, хто залишить відгук!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

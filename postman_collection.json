@@ -1,0 +1,525 @@
+{
+  "info": {
+    "_postman_id": "lab05-outerwear-shop-api",
+    "name": "Outerwear Shop REST API (Lab 5 - Part 1)",
+    "description": "Колекція запитів для тестування REST API інтернет-магазину верхнього одягу (Лабораторна робота №5). Містить позитивні сценарії та тести помилок (400, 404).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Товари (Products v1)",
+      "item": [
+        {
+          "name": "GET Всі товари (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Відповідь є масивом JSON\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"]
+            }
+          }
+        },
+        {
+          "name": "GET Фільтрація товарів за категорією (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?category=Куртки",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Куртки"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Один товар за ID (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Товар має потрібні поля\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('id');",
+                  "    pm.expect(data).to.have.property('name');",
+                  "    pm.expect(data).to.have.property('price');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "GET Товар не знайдено (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"JSON містить повідомлення про помилку\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", "9999"]
+            }
+          }
+        },
+        {
+          "name": "POST Створення товару (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Повертається створений об'єкт із ID\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('id');",
+                  "    pm.expect(data.name).to.eql(\"Парка утеплена Postman\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Парка утеплена Postman\",\n  \"category\": \"Парки\",\n  \"price\": 3750.0,\n  \"description\": \"Створено під час тестування Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"]
+            }
+          }
+        },
+        {
+          "name": "POST Помилка валідації товару (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Повертається список помилок details\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('details');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"category\": \"Куртки\",\n  \"price\": -500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"]
+            }
+          }
+        },
+        {
+          "name": "PUT Оновлення товару (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Дані оновлено\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.name).to.eql(\"Оновлена куртка (PUT)\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Оновлена куртка (PUT)\",\n  \"category\": \"Куртки\",\n  \"price\": 3300.0,\n  \"description\": \"Опис змінено через REST API\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", "2"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Видалення товару (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/19",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", "19"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Відгуки (Feedbacks v1)",
+      "item": [
+        {
+          "name": "GET Всі відгуки (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Відповідь є масивом відгуків\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedbacks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feedbacks"]
+            }
+          }
+        },
+        {
+          "name": "POST Додати відгук (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Відгук створено\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('id');",
+                  "    pm.expect(data.name).to.eql(\"Оксана Бондар\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Оксана Бондар\",\n  \"email\": \"oksana@example.com\",\n  \"message\": \"Дуже гарна якість матеріалів і швидка доставка!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedbacks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feedbacks"]
+            }
+          }
+        },
+        {
+          "name": "POST Помилка валідації email (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Оксана\",\n  \"email\": \"invalid-email-address\",\n  \"message\": \"Норм\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedbacks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "feedbacks"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Версіонування (API v2 - Пагінація)",
+      "item": [
+        {
+          "name": "GET Товари v2 з пагінацією (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Формат конверта v2\", function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.version).to.eql(\"v2\");",
+                  "    pm.expect(data).to.have.property('pagination');",
+                  "    pm.expect(data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/products?page=1&per_page=5&sort=price_desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "5"
+                },
+                {
+                  "key": "sort",
+                  "value": "price_desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Помилка номера сторінки v2 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/products?page=-10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "-10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Документація Flasgger (Swagger UI)",
+      "item": [
+        {
+          "name": "GET Сторінка Swagger UI (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/apidocs/",
+              "host": ["{{baseUrl}}"],
+              "path": ["apidocs", ""]
+            }
+          }
+        },
+        {
+          "name": "GET Специфікація OpenAPI JSON (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус-код 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/apispec_1.json",
+              "host": ["{{baseUrl}}"],
+              "path": ["apispec_1.json"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
